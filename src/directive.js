@@ -193,9 +193,16 @@
      * @param {Object} errorValidator Validator that has error.
      * @param {Object} scope Directive scope.
      */
-    runCallback = function(error, errorValidator, scope) {
+    runCallback = function(error, errorValidator, scope, attrs) {
       if (error) {
-        scope.invalidCallback({errorValidator: errorValidator});
+        var clonedErrorValidator = angular.copy(errorValidator);
+
+        if (sanjiValidatorConfig.isReservedRule(errorValidator.name)) {
+          var exp = $interpolate(errorValidator.error);
+          var errorMessage = exp(attrs);
+          clonedErrorValidator.error = errorMessage;
+        }
+        scope.invalidCallback({errorValidator: clonedErrorValidator});
       } else {
         scope.validCallback();
       }
@@ -247,7 +254,7 @@
           if (! angular.isDefined(sanjiValidatorNoErrorMsgCtrl)) {
             setHtml(element, ret, attrs, options);
           }
-          runCallback(ret.error, ret.errorValidator, scope);
+          runCallback(ret.error, ret.errorValidator, scope, attrs);
 
           if (ret.error && (false === formCtrl.hasSetFocus)) {
             element[0].focus();
@@ -267,7 +274,7 @@
               if (! angular.isDefined(sanjiValidatorNoErrorMsgCtrl)) {
                 setHtml(element, ret, attrs, options);
               }
-              runCallback(ret.error, ret.errorValidator, scope);
+              runCallback(ret.error, ret.errorValidator, scope, attrs);
             });
           });
         };
@@ -289,7 +296,7 @@
           if (! angular.isDefined(sanjiValidatorNoErrorMsgCtrl)) {
             setHtml(element, ret, attrs, options);
           }
-          runCallback(ret.error, ret.errorValidator, scope);
+          runCallback(ret.error, ret.errorValidator, scope, attrs);
         });
       }
     };
